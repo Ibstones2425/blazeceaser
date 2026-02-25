@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - BlazeCeaser</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-shield-halved text-gradient"></i>
+                <span>Admin<span class="text-gradient">Panel</span></span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" onclick="switchTab('users')">
+                        <i class="fa-solid fa-users"></i> Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchTab('templates')">
+                        <i class="fa-solid fa-file-code"></i> Templates
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchTab('cms')">
+                        <i class="fa-solid fa-bullhorn"></i> Announcements
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fa-solid fa-arrow-left"></i> Back to App
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <div id="loader" class="text-center py-6">
+                <div class="loader"></div> Verifying Admin Privileges...
+            </div>
+
+            <div id="admin-content" class="hidden">
+                
+                <!-- TAB: USERS -->
+                <section id="tab-users">
+                    <h1 class="font-bold mb-4 text-gradient" style="font-size: 1.8rem;">User Management</h1>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Joined</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-list">
+                                    <!-- Injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: TEMPLATES -->
+                <section id="tab-templates" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h1 class="font-bold text-gradient" style="font-size: 1.8rem;">Template Registry</h1>
+                        <button onclick="toggleTemplateForm()" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i> Add New
+                        </button>
+                    </div>
+
+                    <!-- Add Template Form -->
+                    <div id="add-template-form" class="card mb-6 hidden" style="background: #F8FAFC;">
+                        <h3 class="font-bold mb-4">Register New Template</h3>
+                        <form id="templateForm">
+                            <div class="grid gap-4" style="grid-template-columns: 1fr 1fr;">
+                                <div class="form-group">
+                                    <label class="form-label">Display Name</label>
+                                    <input type="text" id="t-name" class="form-control" placeholder="e.g. Dark Survey" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Filename (in /templates folder)</label>
+                                    <input type="text" id="t-file" class="form-control" placeholder="e.g. survey-dark.html" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <input type="text" id="t-desc" class="form-control" placeholder="Short description for users">
+                            </div>
+                            <div class="form-group">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="t-premium"> Mark as Premium (Pro Only)
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-success">Save Template</button>
+                        </form>
+                    </div>
+
+                    <div class="templates-grid" id="admin-templates-list">
+                        <!-- Injected via JS -->
+                    </div>
+                </section>
+
+                <!-- TAB: ANNOUNCEMENTS -->
+                <section id="tab-cms" class="hidden">
+                    <h1 class="font-bold mb-4 text-gradient" style="font-size: 1.8rem;">Global Announcements</h1>
+                    
+                    <div class="card mb-6">
+                        <h3 class="font-bold mb-2">Post New Message</h3>
+                        <form id="cmsForm">
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <input type="text" id="cms-title" class="form-control" placeholder="e.g. Maintenance Update" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Message</label>
+                                <textarea id="cms-msg" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Post Announcement</button>
+                        </form>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+    <script>
+        // Tab Switcher Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+        function toggleTemplateForm() {
+            document.getElementById('add-template-form').classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

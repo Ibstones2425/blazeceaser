@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade to Pro - BlazeCeaser</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <!-- SIDEBAR (Standard Navigation) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-fire text-gradient"></i>
+                <span>Blaze<span class="text-gradient">Ceaser</span></span>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fa-solid fa-house"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="generate.html" class="nav-link">
+                        <i class="fa-solid fa-plus-circle"></i> Create Form
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="pro.html" class="nav-link active">
+                        <i class="fa-solid fa-crown" style="color: #F59E0B;"></i> Upgrade to Pro
+                    </a>
+                </li>
+                
+                <!-- Admin Link -->
+                <li class="nav-item hidden" id="admin-link">
+                    <a href="admin.html" class="nav-link">
+                        <i class="fa-solid fa-lock"></i> Admin Panel
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-info" id="user-email-display">Loading...</div>
+                <button onclick="logout()" class="btn btn-secondary btn-sm btn-block">
+                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            
+            <header class="page-header">
+                <div class="flex items-center gap-4">
+                    <button class="btn btn-secondary hidden" id="mobile-menu-btn">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h1 class="font-bold" style="font-size: 1.5rem;">Unlock Full Power</h1>
+                </div>
+            </header>
+
+            <div class="container text-center" style="max-width: 800px;">
+                
+                <!-- Pricing Card -->
+                <div class="card pricing-card">
+                    <span class="badge badge-pro mb-4" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                        <i class="fa-solid fa-crown"></i> PRO PLAN
+                    </span>
+                    
+                    <h2 class="font-bold" style="font-size: 2rem;">Lifetime Access</h2>
+                    <div class="price text-gradient my-4">₦15,000 <span style="font-size: 1rem; color: #64748B;">/ one-time</span></div>
+                    
+                    <p class="text-muted mb-6">
+                        Remove limits and access premium templates. <br>
+                        Manual verification via WhatsApp.
+                    </p>
+
+                    <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 2rem 0;">
+
+                    <ul class="features-list" style="display: inline-block; text-align: left;">
+                        <li>
+                            <i class="fa-solid fa-check-circle text-success"></i> 
+                            <span>Access <b>Premium Templates</b> (Dark Mode, Logic Forms)</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-check-circle text-success"></i> 
+                            <span><b>Priority Support</b> via WhatsApp</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-check-circle text-success"></i> 
+                            <span>Remove "Powered by BlazeCeaser" branding</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-check-circle text-success"></i> 
+                            <span>Extended Data Retention (60 Days)</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-6">
+                        <!-- Dynamic WhatsApp Button -->
+                        <a href="#" id="whatsapp-btn" target="_blank" class="btn btn-pro btn-block" style="font-size: 1.2rem; padding: 1rem;">
+                            <i class="fa-brands fa-whatsapp"></i> Chat to Upgrade
+                        </a>
+                        <p class="text-xs text-muted mt-2">
+                            Clicking will open WhatsApp with a pre-filled message.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { auth } from './js/firebase-config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // CONFIGURATION: REPLACE THIS WITH YOUR PHONE NUMBER
+        // Format: CountryCode + Number (No + sign, no spaces)
+        // Example: Nigeria is 234...
+        const ADMIN_WHATSAPP = "2348123456789"; 
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Update UI
+                const adminLink = document.getElementById('admin-link');
+                const userEmailDisplay = document.getElementById('user-email-display');
+                
+                userEmailDisplay.textContent = user.email;
+                if(user.email === "lateefibrahim2425@gmail.com") {
+                    adminLink.classList.remove('hidden');
+                }
+
+                // Generate Dynamic WhatsApp Link
+                const btn = document.getElementById('whatsapp-btn');
+                const message = `Hello, I would like to upgrade my BlazeCeaser account to PRO.%0A%0AEmail: ${user.email}%0A%0APlease send payment details.`;
+                
+                btn.href = `https://wa.me/${ADMIN_WHATSAPP}?text=${message}`;
+            }
+        });
+
+        // Mobile Toggle
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        if(window.innerWidth <= 768) mobileBtn.style.display = 'inline-flex';
+        mobileBtn.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+    </script>
+</body>
+</html>

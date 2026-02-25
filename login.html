@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - BlazeCeaser</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="auth-wrapper">
+
+    <div class="auth-box">
+        <div class="text-center mb-6">
+            <h2 class="font-bold" style="font-size: 1.8rem; color: var(--text-main);">Welcome Back</h2>
+            <p class="text-muted">Login to manage your forms</p>
+        </div>
+
+        <form id="loginForm">
+            <!-- Email Input -->
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="you@example.com" required>
+            </div>
+            
+            <!-- Password Input -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <!-- Error Message Container -->
+            <div id="error-msg" class="alert alert-error hidden"></div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block mt-4">
+                <span id="btn-text">Login</span>
+                <span id="loader" class="loader hidden"></span>
+            </button>
+        </form>
+
+        <div class="text-center mt-4 text-sm text-muted">
+            New here? <a href="signup.html" class="text-gradient font-bold">Create account</a>
+        </div>
+    </div>
+
+    <!-- Auth Logic Script -->
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>
