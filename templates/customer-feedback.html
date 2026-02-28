@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Feedback</title>
+
+  <!--
+    BLAZE CEASER TEMPLATE RULES:
+    1. Your form must have:         <form id="blaze-form">
+    2. Include the SDK:             <script src="/js/blaze-sdk.js"></script>
+    3. Your submit button calls:    BlazeSubmit()
+    That is all. Do not call Firebase. Do not add your own fetch/submit handler.
+  -->
+  <script src="/js/blaze-sdk.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #ffffff;
+      color: #1a1a2e;
+      padding: 2rem 1.25rem 1.5rem;
+      min-height: 100vh;
+    }
+
+    /* ── Header ──────────────────────────────────────────── */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid #f0f0f5;
+    }
+    .header .icon {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #c0392b;
+      margin-bottom: 0.3rem;
+    }
+    .header p {
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    /* ── Fields ──────────────────────────────────────────── */
+    .field { margin-bottom: 1.3rem; }
+
+    label {
+      display: block;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.45rem;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+      width: 100%;
+      background: #f7f8fc;
+      border: 2px solid #e8eaf0;
+      border-radius: 8px;
+      color: #1a1a2e;
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #c0392b;
+      box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+      background: #fff;
+    }
+    input::placeholder,
+    textarea::placeholder { color: #bbb; }
+
+    textarea  { resize: vertical; min-height: 90px; }
+    select    { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; cursor: pointer; }
+    select option { background: #fff; }
+
+    /* ── Star Rating ─────────────────────────────────────── */
+    .star-label {
+      display: block;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.55rem;
+    }
+    .stars {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+      gap: 0.2rem;
+      margin-bottom: 1.3rem;
+    }
+    .stars input[type="radio"] { display: none; }
+    .stars label {
+      font-size: 2.2rem;
+      color: #e0e0e0;
+      cursor: pointer;
+      margin-bottom: 0;
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.1s, transform 0.1s;
+    }
+    .stars label:hover              { transform: scale(1.15); }
+    .stars input:checked ~ label,
+    .stars label:hover,
+    .stars label:hover ~ label      { color: #f0c040; }
+
+    /* ── Radio options ───────────────────────────────────── */
+    .radio-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.9rem;
+      color: #333;
+      cursor: pointer;
+      padding: 0.55rem 0.9rem;
+      border-radius: 7px;
+      border: 2px solid #e8eaf0;
+      background: #f7f8fc;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .radio-option:hover { border-color: #c0392b; background: #fff5f5; }
+    .radio-option input[type="radio"] {
+      width: auto;
+      padding: 0;
+      border: none;
+      background: none;
+      box-shadow: none;
+      accent-color: #c0392b;
+      flex-shrink: 0;
+    }
+    .radio-option input[type="radio"]:focus { box-shadow: none; border-color: transparent; }
+
+    /* ── Submit button ───────────────────────────────────── */
+    .submit-btn {
+      display: block;
+      width: 100%;
+      background: #c0392b;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      padding: 0.9rem;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .submit-btn:hover {
+      background: #a93226;
+      transform: translateY(-1px);
+    }
+    .submit-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Required ────────────────────────────────────────── */
+    .req { color: #c0392b; margin-left: 2px; }
+
+    /* ── Divider ─────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 2px solid #f0f0f5;
+      margin: 1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="icon">💬</span>
+    <h1>Customer Feedback</h1>
+    <p>We'd love to hear what you think. Takes less than 2 minutes.</p>
+  </div>
+
+  <form id="blaze-form" novalidate>
+
+    <div class="field">
+      <label>Your Name <span class="req">*</span></label>
+      <input type="text" name="name" required placeholder="Jane Smith" />
+    </div>
+
+    <div class="field">
+      <label>Email Address (optional)</label>
+      <input type="email" name="email" placeholder="jane@example.com" />
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Star Rating -->
+    <span class="star-label">Overall Rating <span class="req">*</span></span>
+    <div class="stars">
+      <input type="radio" name="rating" id="star5" value="5" required />
+      <label for="star5" title="5 stars">★</label>
+      <input type="radio" name="rating" id="star4" value="4" />
+      <label for="star4" title="4 stars">★</label>
+      <input type="radio" name="rating" id="star3" value="3" />
+      <label for="star3" title="3 stars">★</label>
+      <input type="radio" name="rating" id="star2" value="2" />
+      <label for="star2" title="2 stars">★</label>
+      <input type="radio" name="rating" id="star1" value="1" />
+      <label for="star1" title="1 star">★</label>
+    </div>
+
+    <div class="field">
+      <label>What did you like most? <span class="req">*</span></label>
+      <textarea name="liked" required placeholder="The thing I enjoyed most was…"></textarea>
+    </div>
+
+    <div class="field">
+      <label>What can we improve?</label>
+      <textarea name="improve" placeholder="I wish you would…"></textarea>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="field">
+      <label>Would you recommend us? <span class="req">*</span></label>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input type="radio" name="recommend" value="definitely" required />
+          Yes, definitely
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="recommend" value="probably" />
+          Probably yes
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="recommend" value="not_sure" />
+          Not sure
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="recommend" value="no" />
+          No
+        </label>
+      </div>
+    </div>
+
+    <button type="button" class="submit-btn" onclick="BlazeSubmit()">
+      Send Feedback
+    </button>
+
+  </form>
+
+</body>
+</html>
