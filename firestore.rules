@@ -1,0 +1,132 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ══════════════════════════════════════════════════════════
+    // HELPER FUNCTIONS
+    // ══════════════════════════════════════════════════════════
+
+    // Is the request from a signed-in user?
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Is the request from the given uid?
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // Is the signed-in user an admin?
+    // Reads the users/{uid} document to check role field.
+    function isAdmin() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Is the signed-in user NOT banned?
+    function notBanned() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.banned == false;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // USERS
+    // ══════════════════════════════════════════════════════════
+    match /users/{uid} {
+
+      // Users can read their own doc (coin balance, role)
+      // Admins can read any user doc
+      allow read: if isAuth() && (isOwner(uid) || isAdmin());
+
+      // Users can only create their own doc, on signup,
+      // with safe defaults — coins=0, role="user", banned=false
+      allow create: if isAuth()
+        && isOwner(uid)
+        && request.resource.data.role    == "user"
+        && request.resource.data.coins   == 0
+        && request.resource.data.banned  == false;
+
+      // Only admin can update user docs (add coins, ban, change role)
+      allow update: if isAdmin();
+
+      // Nobody can delete user docs
+      allow delete: if false;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // TEMPLATES
+    // ══════════════════════════════════════════════════════════
+    match /templates/{tplId} {
+
+      // Authenticated non-banned users can read active templates
+      // Admins can read all templates including inactive ones
+      allow read: if isAuth() && notBanned() &&
+        (resource.data.active == true || isAdmin());
+
+      // Only admin can create, update or delete templates
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // FORMS
+    // ══════════════════════════════════════════════════════════
+    match /forms/{formId} {
+
+      // Public read — unauthenticated visitors need to load
+      // the form document to render the template in their browser
+      allow read: if true;
+
+      // Authenticated non-banned users can create forms
+      // They can only set themselves as owner
+      allow create: if isAuth()
+        && notBanned()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.active  == true;
+
+      // Owner or admin can update or delete a form
+      allow update, delete: if isAuth() &&
+        (isOwner(resource.data.ownerId) || isAdmin());
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // SUBMISSIONS
+    // ══════════════════════════════════════════════════════════
+    match /submissions/{subId} {
+
+      // Public write — visitors are not signed in when they submit.
+      // We enforce that submissions must arrive locked.
+      allow create: if
+        request.resource.data.keys().hasAll([
+          "formId", "ownerId", "answers",
+          "locked", "unlocked", "unlockCost", "teaser"
+        ])
+        && request.resource.data.locked   == true
+        && request.resource.data.unlocked == false;
+
+      // Only the form owner or admin can read a submission
+      allow read: if isAuth() &&
+        (isOwner(resource.data.ownerId) || isAdmin());
+
+      // UNLOCK update — owner only, via Firestore transaction.
+      // Can only flip locked=false and unlocked=true.
+      // No other fields may change.
+      // The coin deduction happens atomically in the same transaction
+      // from unlock.js — security rules enforce the state transition.
+      allow update: if isAuth()
+        && isOwner(resource.data.ownerId)
+        && resource.data.locked   == true
+        && request.resource.data.locked   == false
+        && request.resource.data.unlocked == true
+        && request.resource.data.diff(resource.data)
+             .affectedKeys().hasOnly(["locked", "unlocked"]);
+
+      // Admin can update anything (e.g. support corrections)
+      allow update: if isAdmin();
+
+      // Nobody can delete submissions — permanent audit trail
+      // Admin can delete if absolutely necessary
+      allow delete: if isAdmin();
+    }
+
+  }
+}
