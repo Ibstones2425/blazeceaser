@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Blaze Ceaser</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+
+    /* ── Stats Row ─────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    @media (min-width: 600px) {
+      .stats-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat-card {
+      text-align: center;
+      padding: 1.1rem 0.5rem;
+    }
+    .stat-val {
+      font-size: 1.9rem;
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--text-bright);
+      line-height: 1;
+    }
+    .stat-val.gold   { color: #f0c040; }
+    .stat-val.red    { color: var(--accent); }
+    .stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-top: 0.4rem;
+    }
+
+    /* ── Template Cards ────────────────────────────────────── */
+    .template-card {
+      position: relative;
+      cursor: default;
+    }
+    .template-card .cost-badge {
+      position: absolute;
+      top: 0.85rem;
+      right: 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: #f0c040;
+    }
+    .template-card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+      padding-right: 3.5rem;
+    }
+    .template-card p {
+      font-size: 0.83rem;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+    }
+
+    /* ── Forms List ────────────────────────────────────────── */
+    .list-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      padding: 0.85rem 1rem;
+    }
+    .list-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+    .list-info { flex: 1; min-width: 0; }
+    .list-info .title { font-weight: 600; font-size: 0.95rem; }
+    .list-info small  { font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); }
+    .list-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    /* ── Submission Cards ──────────────────────────────────── */
+    .sub-card { margin-bottom: 0.6rem; }
+    .sub-teaser {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .sub-meta {
+      flex: 1;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+    .sub-actions { flex-shrink: 0; }
+    .sub-answers { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .sub-field-label {
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+
+    /* ── Share Link Modal ──────────────────────────────────── */
+    .link-group { display: flex; gap: 0.5rem; }
+    .link-group input {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      flex: 1;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ── Navbar ───────────────────────────────────────────── -->
+  <nav class="navbar">
+    <span class="logo">BLAZE <span>CEASER</span></span>
+    <div class="nav-actions">
+      <span class="coin-badge" id="coinBadge">0</span>
+      <button class="btn btn-ghost btn-sm" id="buyCoinsBtn">Buy Coins</button>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">Exit</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p id="userEmail" class="text-dim text-sm text-mono"></p>
+      </div>
+
+      <!-- ── Stats ──────────────────────────────────────────── -->
+      <div class="stats-row">
+        <div class="stat-card card">
+          <div class="stat-val gold" id="statCoins">0</div>
+          <div class="stat-label">Coins</div>
+        </div>
+        <div class="stat-card card">
+          <div class="stat-val" id="statForms">0</div>
+          <div class="stat-label">Forms</div>
+        </div>
+        <div class="stat-card card">
+          <div class="stat-val" id="statSubs">0</div>
+          <div class="stat-label">Responses</div>
+        </div>
+        <div class="stat-card card">
+          <div class="stat-val red" id="statLocked">0</div>
+          <div class="stat-label">Locked</div>
+        </div>
+      </div>
+
+      <!-- ── Tabs ───────────────────────────────────────────── -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="templates">Templates</button>
+        <button class="tab-btn" data-tab="myforms">My Forms</button>
+        <button class="tab-btn" data-tab="submissions">Responses</button>
+      </div>
+
+      <!-- ── TEMPLATES TAB ──────────────────────────────────── -->
+      <div class="tab-panel active" id="tab-templates">
+        <div class="section-title">Available Templates</div>
+        <div id="templateGrid" class="grid grid-3">
+          <div class="loader"><div class="spinner"></div> Loading…</div>
+        </div>
+      </div>
+
+      <!-- ── MY FORMS TAB ───────────────────────────────────── -->
+      <div class="tab-panel" id="tab-myforms">
+        <div class="section-title">Generated Forms</div>
+        <div id="formsList" class="card" style="padding: 0;">
+          <div class="loader"><div class="spinner"></div> Loading…</div>
+        </div>
+      </div>
+
+      <!-- ── SUBMISSIONS TAB ────────────────────────────────── -->
+      <div class="tab-panel" id="tab-submissions">
+        <div class="section-title">Received Responses</div>
+        <div id="subsList">
+          <div class="loader"><div class="spinner"></div> Loading…</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── Share Link Modal ───────────────────────────────────── -->
+  <div class="modal-overlay" id="linkModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Share This Form</h3>
+        <button class="modal-close" id="closeLinkModal">✕</button>
+      </div>
+      <p class="text-sm text-dim mb-2">
+        Anyone with this link can submit a response.
+      </p>
+      <div class="link-group">
+        <input type="text" id="shareLink" readonly />
+        <button class="btn btn-primary btn-sm" id="copyLinkBtn">Copy</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" id="closeLinkModal2">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./js/firebase.js";
+    import { requireAuth, logOut } from "./js/auth.js";
+    import { unlockSubmission } from "./js/unlock.js";
+    import {
+      collection, query, where, orderBy,
+      onSnapshot, addDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      doc, getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ── Auth guard ────────────────────────────────────────────
+    const session = await requireAuth("/index.html");
+    if (!session) throw new Error("Unauthenticated");
+    const { user } = session;
+
+    document.getElementById("userEmail").textContent = user.email;
+
+    // ── Logout ────────────────────────────────────────────────
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await logOut();
+      window.location.href = "index.html";
+    });
+
+    // ── Buy coins → WhatsApp ──────────────────────────────────
+    document.getElementById("buyCoinsBtn").addEventListener("click", () => {
+      window.open(
+        "https://wa.me/YOURNUMBER?text=Hi%2C%20I%20want%20to%20buy%20Blaze%20Coins",
+        "_blank"
+      );
+    });
+
+    // ── Tabs ──────────────────────────────────────────────────
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    // ── Real-time coin balance ────────────────────────────────
+    onSnapshot(doc(db, "users", user.uid), (snap) => {
+      const coins = snap.data()?.coins ?? 0;
+      document.getElementById("coinBadge").textContent = coins;
+      document.getElementById("statCoins").textContent = coins;
+    });
+
+    // ── Templates (real-time) ─────────────────────────────────
+    const tplQuery = query(
+      collection(db, "templates"),
+      where("active", "==", true)
+    );
+
+    onSnapshot(tplQuery, (snap) => {
+      const grid = document.getElementById("templateGrid");
+      if (snap.empty) {
+        grid.innerHTML = '<div class="empty-state">No templates available yet.</div>';
+        return;
+      }
+      grid.innerHTML = "";
+      snap.forEach(docSnap => {
+        const t = docSnap.data();
+        const card = document.createElement("div");
+        card.className = "card template-card";
+        card.innerHTML = `
+          <span class="cost-badge">◈ ${t.unlockCost}</span>
+          <h3>${esc(t.name)}</h3>
+          <p>${esc(t.description || "")}</p>
+          <button class="btn btn-primary btn-sm" data-tpl="${docSnap.id}">
+            Use Template
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+
+      grid.querySelectorAll("[data-tpl]").forEach(btn => {
+        btn.addEventListener("click", () => useTemplate(btn.dataset.tpl));
+      });
+    });
+
+    async function useTemplate(templateId) {
+      const ref = await addDoc(collection(db, "forms"), {
+        ownerId:    user.uid,
+        templateId,
+        createdAt:  serverTimestamp(),
+        active:     true
+      });
+      openShareModal(ref.id);
+    }
+
+    // ── My Forms (real-time) ──────────────────────────────────
+    const formsQuery = query(
+      collection(db, "forms"),
+      where("ownerId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+
+    onSnapshot(formsQuery, async (snap) => {
+      document.getElementById("statForms").textContent = snap.size;
+      const list = document.getElementById("formsList");
+
+      if (snap.empty) {
+        list.innerHTML = '<div class="empty-state">No forms yet. Use a template above.</div>';
+        return;
+      }
+
+      list.innerHTML = "";
+
+      for (const docSnap of snap.docs) {
+        const f = docSnap.data();
+        let tplName = "Unknown Template";
+        try {
+          const tSnap = await getDoc(doc(db, "templates", f.templateId));
+          tplName = tSnap.data()?.name || tplName;
+        } catch (_) {}
+
+        const createdAt = f.createdAt?.toDate
+          ? f.createdAt.toDate().toLocaleDateString()
+          : "—";
+
+        const shareUrl = `${location.origin}/f/${docSnap.id}`;
+
+        const row = document.createElement("div");
+        row.className = "list-row";
+        row.innerHTML = `
+          <div class="list-info">
+            <div class="title truncate">${esc(tplName)}</div>
+            <small>Created ${createdAt}</small>
+          </div>
+          <div class="list-actions">
+            <button class="btn btn-ghost btn-sm" data-share="${shareUrl}">
+              Share Link
+            </button>
+          </div>
+        `;
+        list.appendChild(row);
+      }
+
+      list.querySelectorAll("[data-share]").forEach(btn => {
+        btn.addEventListener("click", () => openShareModal(null, btn.dataset.share));
+      });
+    });
+
+    // ── Submissions (real-time) ───────────────────────────────
+    const subsQuery = query(
+      collection(db, "submissions"),
+      where("ownerId", "==", user.uid),
+      orderBy("teaser.submittedAt", "desc")
+    );
+
+    onSnapshot(subsQuery, (snap) => {
+      document.getElementById("statSubs").textContent = snap.size;
+
+      const lockedCount = snap.docs.filter(d => d.data().locked).length;
+      document.getElementById("statLocked").textContent = lockedCount;
+
+      const list = document.getElementById("subsList");
+
+      if (snap.empty) {
+        list.innerHTML = '<div class="empty-state">No responses yet.</div>';
+        return;
+      }
+
+      list.innerHTML = "";
+
+      snap.forEach(docSnap => {
+        const s   = docSnap.data();
+        const sid = docSnap.id;
+        const ts  = s.teaser?.submittedAt?.toDate?.();
+
+        const card = document.createElement("div");
+        card.className = "card sub-card";
+
+        // Teaser row
+        let html = `
+          <div class="sub-teaser">
+            <div class="sub-meta">
+              <div>⏱ ${ts ? ts.toLocaleString() : "Unknown time"}</div>
+              <div>📱 ${esc((s.teaser?.userAgent || "").slice(0, 65))}${s.teaser?.userAgent?.length > 65 ? "…" : ""}</div>
+            </div>
+            <div class="sub-actions">
+        `;
+
+        if (s.locked) {
+          html += `
+              <button class="btn btn-primary btn-sm btn-unlock"
+                data-sid="${sid}" data-cost="${s.unlockCost}">
+                🔓 Unlock (◈ ${s.unlockCost})
+              </button>
+          `;
+        } else {
+          html += `<span class="tag tag-unlocked">Unlocked</span>`;
+        }
+
+        html += `</div></div>`;
+
+        // Show answers if unlocked
+        if (!s.locked && s.answers) {
+          html += `<div class="sub-answers">`;
+          for (const [field, val] of Object.entries(s.answers)) {
+            html += `
+              <div>
+                <div class="sub-field-label">${esc(field)}</div>
+                <div class="answer-block">${esc(String(val))}</div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        card.innerHTML = html;
+        list.appendChild(card);
+      });
+
+      // Attach unlock handlers
+      list.querySelectorAll("[data-sid]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const sid  = btn.dataset.sid;
+          const cost = parseInt(btn.dataset.cost);
+          btn.disabled = true;
+          btn.textContent = "Processing…";
+          try {
+            await unlockSubmission(user.uid, sid);
+            // UI updates automatically via onSnapshot
+          } catch (err) {
+            alert(
+              err.message === "already_unlocked"
+                ? "This response is already unlocked."
+                : err.message
+            );
+            btn.disabled = false;
+            btn.textContent = `🔓 Unlock (◈ ${cost})`;
+          }
+        });
+      });
+    });
+
+    // ── Share Link Modal ──────────────────────────────────────
+    function openShareModal(formId, fullUrl) {
+      const link = fullUrl || `${location.origin}/f/${formId}`;
+      document.getElementById("shareLink").value = link;
+      document.getElementById("linkModal").classList.add("open");
+    }
+
+    document.getElementById("copyLinkBtn").addEventListener("click", () => {
+      const input = document.getElementById("shareLink");
+      navigator.clipboard.writeText(input.value).catch(() => {
+        input.select();
+        document.execCommand("copy");
+      });
+      document.getElementById("copyLinkBtn").textContent = "Copied!";
+      setTimeout(() => {
+        document.getElementById("copyLinkBtn").textContent = "Copy";
+      }, 1800);
+    });
+
+    document.getElementById("closeLinkModal").addEventListener("click",  () => {
+      document.getElementById("linkModal").classList.remove("open");
+    });
+    document.getElementById("closeLinkModal2").addEventListener("click", () => {
+      document.getElementById("linkModal").classList.remove("open");
+    });
+
+    // ── HTML escape utility ───────────────────────────────────
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+  </script>
+</body>
+</html>
