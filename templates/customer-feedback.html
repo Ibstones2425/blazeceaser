@@ -6,13 +6,13 @@
   <title>Customer Feedback</title>
 
   <!--
-    BLAZE CEASER TEMPLATE RULES:
-    1. Your form must have:         <form id="blaze-form">
-    2. Include the SDK:             <script src="/js/blaze-sdk.js"></script>
-    3. Your submit button calls:    BlazeSubmit()
-    That is all. Do not call Firebase. Do not add your own fetch/submit handler.
+    BLAZE CEASER TEMPLATE — NO IFRAME VERSION
+    Rules:
+      1. Your form must have:   <form id="blaze-form">
+      2. Submit button calls:   BlazeSubmit()
+      3. NO <script src="/js/blaze-sdk.js"> needed anymore
+      4. Do NOT call Firebase yourself
   -->
-  <script src="/js/blaze-sdk.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
@@ -27,30 +27,16 @@
       min-height: 100vh;
     }
 
-    /* ── Header ──────────────────────────────────────────── */
     .header {
       text-align: center;
       margin-bottom: 2rem;
       padding-bottom: 1.5rem;
       border-bottom: 2px solid #f0f0f5;
     }
-    .header .icon {
-      font-size: 2.5rem;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    .header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #c0392b;
-      margin-bottom: 0.3rem;
-    }
-    .header p {
-      font-size: 0.85rem;
-      color: #888;
-    }
+    .header .icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+    .header h1   { font-size: 1.5rem; font-weight: 700; color: #c0392b; margin-bottom: 0.3rem; }
+    .header p    { font-size: 0.85rem; color: #888; }
 
-    /* ── Fields ──────────────────────────────────────────── */
     .field { margin-bottom: 1.3rem; }
 
     label {
@@ -78,35 +64,25 @@
       appearance: none;
       -webkit-appearance: none;
     }
-    input:focus,
-    textarea:focus,
-    select:focus {
+    input:focus, textarea:focus, select:focus {
       border-color: #c0392b;
       box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
       background: #fff;
     }
-    input::placeholder,
-    textarea::placeholder { color: #bbb; }
-
-    textarea  { resize: vertical; min-height: 90px; }
-    select    { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; cursor: pointer; }
+    input::placeholder, textarea::placeholder { color: #bbb; }
+    textarea { resize: vertical; min-height: 90px; }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+      cursor: pointer;
+    }
     select option { background: #fff; }
 
-    /* ── Star Rating ─────────────────────────────────────── */
-    .star-label {
-      display: block;
-      font-size: 0.83rem;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 0.55rem;
-    }
-    .stars {
-      display: flex;
-      flex-direction: row-reverse;
-      justify-content: flex-end;
-      gap: 0.2rem;
-      margin-bottom: 1.3rem;
-    }
+    /* Star Rating */
+    .star-label { display: block; font-size: 0.83rem; font-weight: 600; color: #333; margin-bottom: 0.55rem; }
+    .stars { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 0.2rem; margin-bottom: 1.3rem; }
     .stars input[type="radio"] { display: none; }
     .stars label {
       font-size: 2.2rem;
@@ -119,12 +95,12 @@
       line-height: 1;
       transition: color 0.1s, transform 0.1s;
     }
-    .stars label:hover              { transform: scale(1.15); }
+    .stars label:hover { transform: scale(1.15); }
     .stars input:checked ~ label,
     .stars label:hover,
-    .stars label:hover ~ label      { color: #f0c040; }
+    .stars label:hover ~ label { color: #f0c040; }
 
-    /* ── Radio options ───────────────────────────────────── */
+    /* Radio options */
     .radio-group { display: flex; flex-direction: column; gap: 0.5rem; }
     .radio-option {
       display: flex;
@@ -141,17 +117,12 @@
     }
     .radio-option:hover { border-color: #c0392b; background: #fff5f5; }
     .radio-option input[type="radio"] {
-      width: auto;
-      padding: 0;
-      border: none;
-      background: none;
-      box-shadow: none;
-      accent-color: #c0392b;
-      flex-shrink: 0;
+      width: auto; padding: 0; border: none;
+      background: none; box-shadow: none;
+      accent-color: #c0392b; flex-shrink: 0;
     }
     .radio-option input[type="radio"]:focus { box-shadow: none; border-color: transparent; }
 
-    /* ── Submit button ───────────────────────────────────── */
     .submit-btn {
       display: block;
       width: 100%;
@@ -167,25 +138,11 @@
       padding: 0.9rem;
       transition: background 0.15s, transform 0.1s;
     }
-    .submit-btn:hover {
-      background: #a93226;
-      transform: translateY(-1px);
-    }
-    .submit-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .submit-btn:hover { background: #a93226; transform: translateY(-1px); }
+    .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
-    /* ── Required ────────────────────────────────────────── */
     .req { color: #c0392b; margin-left: 2px; }
-
-    /* ── Divider ─────────────────────────────────────────── */
-    .divider {
-      border: none;
-      border-top: 2px solid #f0f0f5;
-      margin: 1.5rem 0;
-    }
+    .divider { border: none; border-top: 2px solid #f0f0f5; margin: 1.5rem 0; }
   </style>
 </head>
 <body>
@@ -210,7 +167,6 @@
 
     <hr class="divider" />
 
-    <!-- Star Rating -->
     <span class="star-label">Overall Rating <span class="req">*</span></span>
     <div class="stars">
       <input type="radio" name="rating" id="star5" value="5" required />
