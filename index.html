@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaze Ceaser — Access</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .auth-logo .wordmark {
+      font-family: var(--mono);
+      font-size: 2rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      display: block;
+    }
+    .auth-logo .tagline {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+      display: block;
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    .auth-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-dim);
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.75rem;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .auth-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .footer-copy {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-page">
+    <div class="auth-box">
+
+      <div class="auth-logo">
+        <span class="wordmark">BLAZE CEASER</span>
+        <span class="tagline">Controlled Template Distribution</span>
+      </div>
+
+      <!-- Banned notice -->
+      <div id="bannedBanner" class="alert alert-error" hidden>
+        Your account has been banned. Contact support.
+      </div>
+
+      <div class="card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Login</button>
+          <button class="auth-tab" data-tab="signup">Sign Up</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" required placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="loginPass">Password</label>
+            <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password" />
+          </div>
+          <div id="loginErr" class="alert alert-error" hidden></div>
+          <button type="submit" class="btn btn-primary w-full" id="loginBtn">
+            Enter System
+          </button>
+        </form>
+
+        <!-- SIGNUP FORM -->
+        <form id="signupForm" class="auth-form" hidden>
+          <div class="form-group">
+            <label for="signupEmail">Email</label>
+            <input type="email" id="signupEmail" required placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="signupPass">Password</label>
+            <input type="password" id="signupPass" required placeholder="Minimum 6 characters" minlength="6" autocomplete="new-password" />
+          </div>
+          <div id="signupErr" class="alert alert-error" hidden></div>
+          <button type="submit" class="btn btn-primary w-full" id="signupBtn">
+            Create Account
+          </button>
+        </form>
+      </div>
+
+      <p class="footer-copy">Blaze Ceaser &copy; 2024 — All access is monitored.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./js/firebase.js";
+    import { signIn, signUp } from "./js/auth.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ── If already logged in, redirect immediately ────────────
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const role = snap.data()?.role;
+      window.location.href = role === "admin" ? "admin.html" : "dashboard.html";
+    });
+
+    // ── Show banned message if redirected here with ?banned=1 ─
+    if (new URLSearchParams(location.search).get("banned")) {
+      document.getElementById("bannedBanner").hidden = false;
+    }
+
+    // ── Tab switching ─────────────────────────────────────────
+    document.querySelectorAll(".auth-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        const show = tab.dataset.tab;
+        document.getElementById("loginForm").hidden  = show !== "login";
+        document.getElementById("signupForm").hidden = show !== "signup";
+      });
+    });
+
+    // ── Helpers ───────────────────────────────────────────────
+    function showErr(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.hidden = false;
+    }
+    function hideErr(id) {
+      document.getElementById(id).hidden = true;
+    }
+    function setBtnLoading(btn, loading) {
+      btn.disabled = loading;
+      btn.textContent = loading ? "Please wait…" : btn.dataset.orig;
+    }
+
+    // Store original button labels
+    document.getElementById("loginBtn").dataset.orig  = "Enter System";
+    document.getElementById("signupBtn").dataset.orig = "Create Account";
+
+    // ── Login ─────────────────────────────────────────────────
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideErr("loginErr");
+      const btn = document.getElementById("loginBtn");
+      setBtnLoading(btn, true);
+      try {
+        const user = await signIn(
+          document.getElementById("loginEmail").value.trim(),
+          document.getElementById("loginPass").value
+        );
+        const snap = await getDoc(doc(db, "users", user.uid));
+        const role = snap.data()?.role;
+        window.location.href = role === "admin" ? "admin.html" : "dashboard.html";
+      } catch (err) {
+        showErr("loginErr", err.message.replace("Firebase: ", "").replace(/\(.*\)/, "").trim());
+        setBtnLoading(btn, false);
+      }
+    });
+
+    // ── Sign Up ───────────────────────────────────────────────
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideErr("signupErr");
+      const btn = document.getElementById("signupBtn");
+      setBtnLoading(btn, true);
+      try {
+        await signUp(
+          document.getElementById("signupEmail").value.trim(),
+          document.getElementById("signupPass").value
+        );
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        showErr("signupErr", err.message.replace("Firebase: ", "").replace(/\(.*\)/, "").trim());
+        setBtnLoading(btn, false);
+      }
+    });
+  </script>
+
+</body>
+</html>
