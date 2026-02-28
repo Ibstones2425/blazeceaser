@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job Application</title>
+
+  <!--
+    BLAZE CEASER TEMPLATE RULES:
+    1. Your form must have:         <form id="blaze-form">
+    2. Include the SDK:             <script src="/js/blaze-sdk.js"></script>
+    3. Your submit button calls:    BlazeSubmit()
+    That is all. Do not call Firebase. Do not add your own fetch/submit handler.
+  -->
+  <script src="/js/blaze-sdk.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0d1117;
+      color: #cdd6e0;
+      padding: 2rem 1.25rem 1.5rem;
+      min-height: 100vh;
+    }
+
+    /* ── Header ──────────────────────────────────────────── */
+    .header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid #1e2d3d;
+    }
+    .header h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.3rem;
+    }
+    .header p {
+      font-size: 0.85rem;
+      color: #6b7c90;
+    }
+
+    /* ── Fields ──────────────────────────────────────────── */
+    .field { margin-bottom: 1.25rem; }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #6b7c90;
+      margin-bottom: 0.45rem;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    textarea,
+    select {
+      width: 100%;
+      background: #161b27;
+      border: 1px solid #2a3445;
+      border-radius: 7px;
+      color: #e6edf3;
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #c0392b;
+      box-shadow: 0 0 0 3px rgba(192,57,43,0.18);
+    }
+    input::placeholder,
+    textarea::placeholder { color: #3d4f63; }
+
+    textarea  { resize: vertical; min-height: 100px; }
+    select    { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7c90' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; cursor: pointer; }
+    select option { background: #161b27; }
+
+    /* ── Two-column row ──────────────────────────────────── */
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 480px) { .row-2 { grid-template-columns: 1fr; } }
+
+    /* ── Radio group ─────────────────────────────────────── */
+    .radio-group { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.2rem; }
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.9rem;
+      color: #cdd6e0;
+      cursor: pointer;
+      padding: 0.55rem 0.85rem;
+      border-radius: 6px;
+      border: 1px solid #2a3445;
+      background: #161b27;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .radio-option:hover { border-color: #c0392b; background: #1e1520; }
+    .radio-option input[type="radio"] {
+      width: auto;
+      padding: 0;
+      border: none;
+      background: none;
+      box-shadow: none;
+      accent-color: #c0392b;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .radio-option input[type="radio"]:focus { box-shadow: none; border-color: transparent; }
+
+    /* ── Submit button ───────────────────────────────────── */
+    .submit-btn {
+      display: block;
+      width: 100%;
+      background: #c0392b;
+      border: none;
+      border-radius: 7px;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-top: 0.5rem;
+      padding: 0.85rem;
+      text-transform: uppercase;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .submit-btn:hover {
+      background: #a93226;
+      box-shadow: 0 0 18px rgba(192,57,43,0.35);
+    }
+    .submit-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* ── Required star ───────────────────────────────────── */
+    .req { color: #c0392b; margin-left: 2px; }
+
+    /* ── Section divider ─────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid #1e2d3d;
+      margin: 1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Job Application</h1>
+    <p>Fill in all fields carefully. All submissions are reviewed by our team.</p>
+  </div>
+
+  <form id="blaze-form" novalidate>
+
+    <div class="row-2">
+      <div class="field">
+        <label>First Name <span class="req">*</span></label>
+        <input type="text" name="first_name" required placeholder="John" />
+      </div>
+      <div class="field">
+        <label>Last Name <span class="req">*</span></label>
+        <input type="text" name="last_name" required placeholder="Doe" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Email Address <span class="req">*</span></label>
+      <input type="email" name="email" required placeholder="john@example.com" />
+    </div>
+
+    <div class="field">
+      <label>Phone Number <span class="req">*</span></label>
+      <input type="tel" name="phone" required placeholder="+1 234 567 8900" />
+    </div>
+
+    <hr class="divider" />
+
+    <div class="field">
+      <label>Position Applying For <span class="req">*</span></label>
+      <select name="position" required>
+        <option value="">Select a position…</option>
+        <option value="software_developer">Software Developer</option>
+        <option value="ui_ux_designer">UI / UX Designer</option>
+        <option value="project_manager">Project Manager</option>
+        <option value="marketing">Marketing Specialist</option>
+        <option value="sales">Sales Representative</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Years of Experience <span class="req">*</span></label>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input type="radio" name="experience" value="less_than_1" required />
+          Less than 1 year
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="experience" value="1_to_3" />
+          1 – 3 years
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="experience" value="3_to_5" />
+          3 – 5 years
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="experience" value="5_plus" />
+          5+ years
+        </label>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="field">
+      <label>Why do you want this role? <span class="req">*</span></label>
+      <textarea name="motivation" required placeholder="Tell us why you are a great fit for this position…"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Portfolio / LinkedIn URL</label>
+      <input type="url" name="portfolio_url" placeholder="https://…" />
+    </div>
+
+    <button type="button" class="submit-btn" onclick="BlazeSubmit()">
+      Submit Application
+    </button>
+
+  </form>
+
+</body>
+</html>
