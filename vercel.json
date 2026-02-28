@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/f/:formId", "destination": "/f/index.html" }
+  ]
+}
