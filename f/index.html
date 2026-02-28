@@ -3,222 +3,106 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Form — Blaze Ceaser</title>
-  <link rel="stylesheet" href="../css/style.css" />
-  <style>
-
-    .form-page {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1.5rem 1rem 4rem;
-    }
-
-    .form-wrap {
-      width: 100%;
-      max-width: 640px;
-    }
-
-    .form-brand {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      text-align: center;
-      margin-bottom: 1.25rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-    .form-brand span { color: var(--accent); }
-
-    /*
-      The iframe renders the full template HTML file.
-      It auto-resizes to its content height.
-      No border, no scroll — it looks like a native part of the page.
-    */
-    #formFrame {
-      width: 100%;
-      border: none;
-      border-radius: 8px;
-      display: block;
-      min-height: 200px;
-      overflow: hidden;
-    }
-
-    .success-screen {
-      text-align: center;
-      padding: 3.5rem 1rem;
-    }
-    .success-icon {
-      font-size: 3.5rem;
-      margin-bottom: 1rem;
-      display: block;
-    }
-    .success-screen h2 { margin-bottom: 0.5rem; }
-    .success-screen p  { color: var(--text-dim); font-size: 0.95rem; }
-
-  </style>
+  <title>Form</title>
 </head>
 <body>
 
-  <div class="form-page">
-    <div class="form-wrap">
+  <div id="errorState" style="display:none;font-family:sans-serif;font-size:0.95rem;color:#e74c3c;background:#2d0a0a;border:1px solid #7a1f1f;border-radius:6px;padding:1rem 1.25rem;margin:2rem auto;max-width:520px;"></div>
 
-      <div class="form-brand">Powered by <span>Blaze Ceaser</span></div>
+  <div id="formContainer"></div>
 
-      <!-- Loading state -->
-      <div id="loadState" class="loader">
-        <div class="spinner"></div> Loading form…
-      </div>
-
-      <!-- Error state -->
-      <div id="errorState" class="alert alert-error" hidden></div>
-
-      <!--
-        The template HTML file loads here inside an iframe.
-        The template's own submit button calls BlazeSubmit().
-        BlazeSubmit() sends answers up here via postMessage.
-        This page then saves everything to Firestore.
-        The template never touches Firebase directly.
-      -->
-      <iframe
-        id="formFrame"
-        hidden
-        scrolling="no"
-        title="Form"
-      ></iframe>
-
-      <!-- Success state -->
-      <div id="successCard" class="card success-screen" hidden>
-        <span class="success-icon">✔</span>
-        <h2>Response Submitted</h2>
-        <p>Thank you. Your response has been recorded successfully.</p>
-      </div>
-
-    </div>
+  <div id="successCard" style="display:none;text-align:center;padding:4rem 1rem;font-family:sans-serif;">
+    <div style="font-size:3.5rem;margin-bottom:1rem">✔</div>
+    <h2 style="margin-bottom:0.5rem">Response Submitted</h2>
+    <p style="color:#888">Thank you. Your response has been recorded.</p>
   </div>
 
   <script type="module">
     import { db } from "../js/firebase.js";
     import {
-      doc,
-      getDoc,
-      addDoc,
-      collection,
-      serverTimestamp
+      doc, getDoc, addDoc, collection, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ── Elements ──────────────────────────────────────────────
-    const loadState   = document.getElementById("loadState");
-    const errorState  = document.getElementById("errorState");
-    const formFrame   = document.getElementById("formFrame");
-    const successCard = document.getElementById("successCard");
+    const errorState    = document.getElementById("errorState");
+    const formContainer = document.getElementById("formContainer");
+    const successCard   = document.getElementById("successCard");
 
-    // ── Get formId from the URL ───────────────────────────────
-    // URL pattern: /f/{formId}
-    // Works with hosting rewrites that point /f/* → /f/index.html
+    function showError(msg) {
+      errorState.textContent   = msg;
+      errorState.style.display = "block";
+    }
+
     const parts  = location.pathname.split("/").filter(Boolean);
     const formId = parts[parts.length - 1];
 
-    function showError(msg) {
-      loadState.style.display = "none";
-      errorState.textContent  = msg;
-      errorState.hidden       = false;
-    }
-
-    // ── Step 1: Load form document from Firestore ─────────────
     let formData, templateData;
 
     try {
       const formSnap = await getDoc(doc(db, "forms", formId));
-
-      if (!formSnap.exists()) {
-        showError("Form not found. This link may be invalid."); return;
-      }
-
+      if (!formSnap.exists())   { showError("Form not found."); return; }
       formData = formSnap.data();
+      if (!formData.active)     { showError("This form is no longer active."); return; }
 
-      if (!formData.active) {
-        showError("This form is no longer accepting responses."); return;
-      }
-
-      // ── Step 2: Load the template record ───────────────────
       const tplSnap = await getDoc(doc(db, "templates", formData.templateId));
-
-      if (!tplSnap.exists()) {
-        showError("Template not found."); return;
-      }
-
+      if (!tplSnap.exists())    { showError("Template not found."); return; }
       templateData = tplSnap.data();
-
-      if (!templateData.active) {
-        showError("This form has been deactivated by the owner."); return;
-      }
-
+      if (!templateData.active) { showError("This form has been deactivated."); return; }
     } catch (e) {
-      showError("Failed to load form. Please check your connection and try again.");
+      showError("Failed to load form. Please try again.");
       return;
     }
 
-    // ── Step 3: Load template HTML file into iframe ───────────
-    // templateData.filePath = e.g. "/templates/job-application.html"
-    // The template file includes blaze-sdk.js which exposes BlazeSubmit()
-    formFrame.src    = templateData.filePath;
-    formFrame.hidden = false;
+    let templateHTML;
+    try {
+      const res = await fetch(templateData.filePath);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      templateHTML = await res.text();
+    } catch (e) {
+      showError("Could not load form template. Please try again.");
+      return;
+    }
 
-    // Auto-resize iframe height to match content
-    // so it looks seamless — no scrollbar inside the frame
-    formFrame.addEventListener("load", () => {
-      try {
-        const resize = () => {
-          const h = formFrame.contentDocument?.documentElement?.scrollHeight;
-          if (h && h > 0) {
-            formFrame.style.height = (h + 24) + "px";
-          }
-        };
-        resize();
-        // Keep watching for layout changes (e.g. validation messages appearing)
-        new ResizeObserver(resize).observe(
-          formFrame.contentDocument.documentElement
-        );
-      } catch (_) {
-        // Cross-origin fallback (shouldn't happen on same domain)
-        formFrame.style.height = "700px";
-      }
+    const parser = new DOMParser();
+    const tplDoc = parser.parseFromString(templateHTML, "text/html");
+
+    document.title = templateData.name || "Form";
+
+    tplDoc.querySelectorAll("style").forEach(style => {
+      const clone = document.createElement("style");
+      clone.textContent = style.textContent;
+      document.head.appendChild(clone);
     });
 
-    // ── Step 4: Listen for messages from BlazeSubmit() ───────
-    // blaze-sdk.js inside the iframe calls:
-    //   window.parent.postMessage({ type: "BLAZE_ANSWERS", answers }, "*")
-    // We catch it here and save to Firestore.
-
-    let submitted = false; // Prevent double submission
-
-    window.addEventListener("message", async (e) => {
-      // Only process messages that have a type field
-      if (!e.data?.type) return;
-
-      switch (e.data.type) {
-
-        case "BLAZE_READY":
-          // Template is loaded, hide the loading spinner
-          loadState.style.display = "none";
-          break;
-
-        case "BLAZE_INVALID":
-          // Validation failed inside template — template shows its own errors
-          // Nothing needed here
-          break;
-
-        case "BLAZE_ANSWERS":
-          if (submitted) return;
-          submitted = true;
-          await saveSubmission(e.data.answers);
-          break;
-      }
+    tplDoc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+      const clone = document.createElement("link");
+      clone.rel  = "stylesheet";
+      clone.href = link.href;
+      document.head.appendChild(clone);
     });
 
-    // ── Step 5: Save submission to Firestore ──────────────────
+    formContainer.innerHTML = tplDoc.body.innerHTML;
+
+    formContainer.querySelectorAll("script").forEach(old => {
+      if (old.src && old.src.includes("blaze-sdk")) return;
+      const s = document.createElement("script");
+      if (old.src) { s.src = old.src; } else { s.textContent = old.textContent; }
+      document.body.appendChild(s);
+    });
+
+    let submitted = false;
+
+    window.BlazeSubmit = function () {
+      if (submitted) return;
+      const form = document.getElementById("blaze-form");
+      if (!form) { alert("Form error. Please contact support."); return; }
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      submitted = true;
+      form.querySelectorAll("input, textarea, select, button").forEach(el => el.disabled = true);
+      const answers = {};
+      for (const [key, val] of new FormData(form).entries()) { answers[key] = val; }
+      saveSubmission(answers);
+    };
+
     async function saveSubmission(answers) {
       try {
         await addDoc(collection(db, "submissions"), {
@@ -233,22 +117,13 @@
             userAgent:   navigator.userAgent
           }
         });
-
-        // Show success
-        formFrame.hidden      = true;
-        successCard.hidden    = false;
-
+        formContainer.style.display = "none";
+        successCard.style.display   = "block";
       } catch (err) {
-        // Allow retry
         submitted = false;
-
-        // Notify the template so it can re-enable the submit button
-        try {
-          formFrame.contentWindow?.postMessage({ type: "BLAZE_SAVE_ERROR" }, "*");
-        } catch (_) {}
-
-        errorState.textContent = "Submission failed. Please try again.";
-        errorState.hidden      = false;
+        const form = document.getElementById("blaze-form");
+        if (form) form.querySelectorAll("input, textarea, select, button").forEach(el => el.disabled = false);
+        showError("Submission failed. Please try again.");
       }
     }
 
