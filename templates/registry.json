@@ -1,0 +1,16 @@
+[
+  {
+    "id": "job-application",
+    "name": "Job Application",
+    "description": "Full job application with name, email, position, experience and motivation",
+    "file": "/templates/job-application.html",
+    "preview": "Dark theme — professional"
+  },
+  {
+    "id": "customer-feedback",
+    "name": "Customer Feedback",
+    "description": "Star rating, likes, improvements and recommendation",
+    "file": "/templates/customer-feedback.html",
+    "preview": "Light theme — friendly"
+  }
+]
